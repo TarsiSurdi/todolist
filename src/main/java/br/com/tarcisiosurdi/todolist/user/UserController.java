@@ -1,5 +1,8 @@
 package br.com.tarcisiosurdi.todolist.user;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -8,8 +11,19 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/users")
 public class UserController {
-    @PostMapping("/")
-    public void create(@RequestBody UserModel userModel) {
-        System.out.println(userModel.name);
+
+    @Autowired
+    private IUserRepository userRepository;
+
+    @PostMapping
+    public ResponseEntity create(@RequestBody UserModel userModel) {
+        var userExists = this.userRepository.findByUsername(userModel.getUsername());
+
+        if (userExists != null) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body("O usuário já existe!");
+        }
+
+        var userCreated = this.userRepository.save(userModel);
+        return ResponseEntity.status(HttpStatus.CREATED).body(userCreated);
     }
 }
